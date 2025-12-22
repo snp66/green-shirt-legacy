@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Green Shirt Legacy</title>
+    <style>
+        :root { 
+            --gold: #d4af37; 
+            --forest: #1a3c31; 
+            --deep-green: #0f1a15;
+            --cream: #f4f1ea;
+        }
+        body { background: var(--deep-green); color: var(--cream); font-family: 'Georgia', serif; margin: 0; padding: 0; line-height: 1.8; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+        
+        nav { background: rgba(0,0,0,0.9); padding: 15px; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--gold); display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        nav a { color: var(--gold); text-decoration: none; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+        nav a:hover { color: white; }
+        
+        header { 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('shirt.png'); 
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            height: 45vh; display: flex; flex-direction: column; justify-content: center; align-items: center; border-bottom: 5px solid var(--gold);
+        }
+        h1 { font-size: clamp(2rem, 10vw, 4rem); color: var(--gold); margin: 0; letter-spacing: 8px; text-shadow: 3px 3px 15px black; text-align: center; }
+
+        section { padding: 60px 20px; max-width: 1100px; margin: 0 auto; }
+        h2 { color: var(--gold); text-align: center; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 40px; }
+
+        .story-box { background: var(--cream); color: #111; padding: 40px; border-radius: 3px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+        .card { background: rgba(255,255,255,0.03); border: 1px solid var(--gold); padding: 30px; text-align: center; text-decoration: none; color: inherit; transition: 0.4s; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover { background: rgba(212, 175, 55, 0.1); transform: translateY(-10px); }
+        .btn { display: inline-block; background: var(--gold); color: black; padding: 12px 24px; font-weight: bold; margin-top: 20px; text-transform: uppercase; text-decoration: none; }
+
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 4px solid var(--gold); background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .photo-frame { aspect-ratio: 4/3; background: #222; border: 1px solid #444; display: flex; align-items: center; justify-content: center; color: #888; font-size: 0.8rem; text-align: center; padding: 10px; }
+
+        footer { text-align: center; padding: 60px; font-size: 0.8rem; color: #666; border-top: 1px solid rgba(212, 175, 55, 0.2); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#story">The Story</a>
+        <a href="#games">Arcade</a>
+        <a href="#video">Documentary</a>
+        <a href="#photos">Album</a>
+    </nav>
+
+    <header>
+        <h1>THE GREEN SHIRT</h1>
+        <p>A Family Legacy &bull; A Shared Joke</p>
+    </header>
+
+    <section id="story">
+        <h2>The Story</h2>
+        <div class="story-box">
+            <h3>Chapter 1: The Origin</h3>
+            <p>It represents years of family connection and laughter. Whether it arrived in a shadow box or was discovered in a surprise delivery, the mission was always clear: The Shirt must be passed.</p>
+        </div>
+    </section>
+
+    <section id="games">
+        <h2>The Arcade</h2>
+        <div class="grid">
+            <a href="shirt-delivery.html" class="card"><h3>📦 Surprise Delivery</h3><p>Physics-based launching fun.</p><div class="btn">Play</div></a>
+            <a href="shirt-hunt.html" class="card"><h3>🔎 Great Hunt</h3><p>Find the hidden shirt.</p><div class="btn">Play</div></a>
+            <a href="shirt-puzzle.html" class="card"><h3>🧩 Jigsaw</h3><p>Reassemble the legacy.</p><div class="btn">Play</div></a>
+            <a href="shirt-toe.html" class="card"><h3>⭕ Legacy Toe</h3><p>VS CPU battle.</p><div class="btn">Play</div></a>
+            <a href="traveling-shirt.html" class="card"><h3>🚀 Traveling Shirt</h3><p>Avoid the distance obstacles.</p><div class="btn">Play</div></a>
+            <a href="shirt.html" class="card"><h3>🪝 Hook Toss</h3><p>The original classic.</p><div class="btn">Play</div></a>
+        </div>
+    </section>
+
+    <section id="video">
+        <h2>The Documentation</h2>
+        <div class="video-container">
+            <iframe src="https://www.youtube-nocookie.com/embed/vGZXtj7NREU?rel=0" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </section>
+
+    <section id="photos">
+        <h2>The Evidence</h2>
+        <div class="album-grid">
+            <div class="photo-frame">2018: The Shadow Box</div>
+            <div class="photo-frame">2019: The Ornament</div>
+            <div class="photo-frame">2021: Surprise Delivery</div>
+            <div class="photo-frame">2023: The Legend Grows</div>
+        </div>
+    </section>
+
+    <footer>REPRESENTING THE GREEN SHIRT HERITAGE SOCIETY &copy; 2025</footer>
+</body>
+</html>

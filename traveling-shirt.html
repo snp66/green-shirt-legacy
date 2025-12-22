@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Traveling Shirt</title>
+    <style>
+        :root { --gold: #d4af37; --forest: #1a3c31; --deep-green: #0f1a15; --cream: #f4f1ea; }
+        body { background: var(--deep-green); color: var(--gold); text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; touch-action: none; }
+        canvas { width: 100%; max-width: 600px; height: auto; border: 3px solid var(--gold); background: #87CEEB; display: block; margin: 0 auto; }
+        .ui { padding: 10px; font-size: 1.5rem; font-weight: bold; }
+        #over { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); flex-direction: column; justify-content: center; align-items: center; }
+        .btn { background: var(--gold); color: black; padding: 15px 30px; border: none; font-weight: bold; margin: 10px; text-decoration: none; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="ui">Score: <span id="scr">0</span></div>
+    <canvas id="gc" width="400" height="600"></canvas>
+    <div id="over">
+        <h1>GAME OVER</h1>
+        <button class="btn" onclick="location.reload()">Try Again</button>
+        <a href="index.html" class="btn" style="background:var(--cream)">Home</a>
+    </div>
+    <script>
+        const canvas = document.getElementById("gc"), ctx = canvas.getContext("2d");
+        const shirt = new Image(); shirt.src = "shirt.png";
+        let score = 0, frames = 0, over = false;
+        let s = { x: 50, y: 200, v: 0, g: 0.25 };
+        let obstacles = [];
+
+        function update() {
+            if(over) return;
+            ctx.clearRect(0,0,400,600);
+            
+            // Shirt Physics
+            s.v += s.g; s.y += s.v;
+            if(s.y > 580 || s.y < 0) endGame();
+            ctx.drawImage(shirt, s.x, s.y, 40, 40);
+
+            // Obstacles (Boxes/Packages)
+            if(frames % 100 === 0) {
+                let h = Math.random() * 300 + 50;
+                obstacles.push({ x: 400, y: 0, w: 50, h: h, type: 'top' });
+                obstacles.push({ x: 400, y: h + 150, w: 50, h: 600, type: 'bottom' });
+            }
+
+            obstacles.forEach((o, i) => {
+                o.x -= 3;
+                ctx.fillStyle = "#8B4513";
+                ctx.fillRect(o.x, o.y, o.w, o.h);
+                // Collision
+                if(s.x < o.x + o.w && s.x + 30 > o.x && s.y < o.y + o.h && s.y + 30 > o.y) endGame();
+                if(o.x < -50) { obstacles.splice(i, 1); if(o.type === 'top') { score++; document.getElementById("scr").innerText = score; } }
+            });
+
+            frames++;
+            requestAnimationFrame(update);
+        }
+
+        function endGame() { over = true; document.getElementById("over").style.display = "flex"; }
+        function jump() { s.v = -6; }
+
+        window.addEventListener("mousedown", jump);
+        window.addEventListener("touchstart", (e) => { jump(); e.preventDefault(); });
+        shirt.onload = update;
+    </script>
+</body>
+</html>

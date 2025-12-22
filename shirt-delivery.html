@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Surprise Delivery</title>
+    <style>
+        :root { --gold: #d4af37; --deep-green: #0f1a15; --cream: #f4f1ea; }
+        body { background: var(--deep-green); color: var(--cream); text-align: center; font-family: sans-serif; margin: 0; touch-action: none; overflow: hidden; }
+        .ui { padding: 15px; font-weight: bold; color: var(--gold); font-size: 1.2rem; }
+        canvas { width: 100%; max-width: 800px; height: auto; border: 3px solid var(--gold); display: block; margin: 0 auto; background: #2c3e50; }
+        .btn { background: var(--gold); color: black; padding: 15px 30px; border: none; font-weight: bold; text-decoration: none; display: inline-block; cursor: pointer; text-transform: uppercase; margin: 10px; }
+        #overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); flex-direction:column; justify-content:center; align-items:center; z-index:100; }
+    </style>
+</head>
+<body>
+    <div class="ui">Score: <span id="s">0</span> | Ammo: <span id="a">5</span></div>
+    <canvas id="c" width="800" height="400"></canvas>
+    <div id="overlay">
+        <h1 style="color:var(--gold)">DELIVERY COMPLETE</h1>
+        <p id="fs" style="font-size:2rem"></p>
+        <button class="btn" onclick="location.reload()">Play Again</button>
+        <a href="index.html" class="btn" style="background:var(--cream)">Exit</a>
+    </div>
+    <script>
+        const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+        const shirt = new Image(); shirt.src = "shirt.png";
+        let score = 0, ammo = 5, drag = false, m = {x:0, y:0};
+        let p = {x:100, y:300, vx:0, vy:0, active:false}, t = {x:600, y:330, w:100, spd:2.5};
+
+        function update() {
+            ctx.clearRect(0,0,800,400);
+            ctx.fillStyle = "#1a3c31"; ctx.fillRect(0,350,800,50);
+            ctx.fillStyle = "#e67e22"; ctx.fillRect(t.x, t.y, t.w, 20);
+            t.x += t.spd; if(t.x > 680 || t.x < 400) t.spd *= -1;
+
+            if(drag) { ctx.beginPath(); ctx.strokeStyle = "white"; ctx.setLineDash([5,5]); ctx.moveTo(100,300); ctx.lineTo(m.x, m.y); ctx.stroke(); ctx.setLineDash([]); }
+            if(p.active) {
+                p.vy += 0.25; p.x += p.vx; p.y += p.vy;
+                if(p.y > 330) {
+                    if(p.x > t.x && p.x < t.x + t.w) { score += 100; document.getElementById("s").innerText = score; }
+                    p.active = false; ammo--; document.getElementById("a").innerText = ammo;
+                    if(ammo <= 0) { document.getElementById("overlay").style.display="flex"; document.getElementById("fs").innerText = "Final Score: " + score; }
+                }
+            }
+            ctx.drawImage(shirt, p.x-25, p.y-25, 50, 50);
+            requestAnimationFrame(update);
+        }
+
+        const getMouse = e => {
+            const r = canvas.getBoundingClientRect();
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (cx - r.left) * (800 / r.width), y: (cy - r.top) * (400 / r.height) };
+        };
+
+        canvas.addEventListener("mousedown", () => { if(!p.active && ammo>0) drag = true; });
+        canvas.addEventListener("touchstart", (e) => { if(!p.active && ammo>0) { drag = true; e.preventDefault(); }});
+        window.addEventListener("mousemove", e => { m = getMouse(e); });
+        window.addEventListener("touchmove", e => { m = getMouse(e); });
+        window.addEventListener("mouseup", () => {
+            if(drag) { p.active = true; p.x = 100; p.y = 300; p.vx = (100 - m.x)*0.12; p.vy = (300 - m.y)*0.12; drag = false; }
+        });
+        window.addEventListener("touchend", () => {
+            if(drag) { p.active = true; p.x = 100; p.y = 300; p.vx = (100 - m.x)*0.12; p.vy = (300 - m.y)*0.12; drag = false; }
+        });
+        shirt.onload = update;
+    </script>
+</body>
+</html>

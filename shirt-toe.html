@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legacy Toe</title>
+    <style>
+        body { background: #0f1a15; color: #d4af37; text-align: center; font-family: serif; margin: 0; padding: 20px; }
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 20px auto; }
+        .cell { aspect-ratio: 1/1; background: #1a3c31; border: 2px solid #d4af37; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+        img { width: 75%; }
+        .btn { background: #d4af37; color: black; padding: 15px; text-decoration: none; display: inline-block; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Shirt VS Hook</h2>
+    <div id="stat">Your Turn (Shirt)</div>
+    <div class="board" id="b"></div>
+    <button class="btn" onclick="location.reload()">Restart</button>
+    <a href="index.html" class="btn" style="background:#f4f1ea">Home</a>
+    <script>
+        const board = document.getElementById("b"), state = Array(9).fill(null);
+        let active = true;
+        for(let i=0; i<9; i++) {
+            const c = document.createElement("div"); c.className = "cell";
+            c.onclick = () => { if(!state[i] && active) { state[i]="S"; c.innerHTML="<img src='shirt.png'>"; check(); if(active) cpu(); } };
+            board.appendChild(c);
+        }
+        function cpu() {
+            const empty = state.map((v,i) => v===null ? i : null).filter(v => v!==null);
+            if(empty.length) { 
+                const choice = empty[Math.floor(Math.random()*empty.length)];
+                state[choice] = "H"; board.children[choice].innerText = "🪝"; check();
+            }
+        }
+        function check() {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for(let w of wins) {
+                if(state[w[0]] && state[w[0]]===state[w[1]] && state[w[0]]===state[w[2]]) {
+                    document.getElementById("stat").innerText = state[w[0]]==="S" ? "YOU WIN!" : "CPU WINS!";
+                    active = false; return;
+                }
+            }
+            if(!state.includes(null)) document.getElementById("stat").innerText = "DRAW!";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hook Toss - Heritage Society</title>
+    <style>
+        :root { --gold: #d4af37; --forest: #1a3c31; --deep-green: #0f1a15; --cream: #f4f1ea; }
+        body { 
+            background: var(--deep-green); 
+            color: var(--gold); 
+            text-align: center; 
+            font-family: 'Georgia', serif; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            touch-action: none; 
+        }
+        .ui { padding: 15px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.3); }
+        canvas { 
+            display: block; 
+            margin: 0 auto; 
+            background: var(--forest); 
+            border-bottom: 4px solid var(--gold); 
+            width: 100%; 
+            max-width: 600px; 
+            height: auto; 
+        }
+        .controls { padding: 20px; }
+        .btn { 
+            background: var(--gold); 
+            color: black; 
+            padding: 15px 30px; 
+            border: none; 
+            font-weight: bold; 
+            text-decoration: none; 
+            display: inline-block; 
+            text-transform: uppercase; 
+            cursor: pointer;
+        }
+        #msg { 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: rgba(0,0,0,0.9); 
+            padding: 30px; 
+            border: 2px solid var(--gold); 
+            display: none; 
+            z-index: 10; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui">Score: <span id="score">0</span></div>
+    
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+
+    <div class="controls">
+        <p>Tap/Click to Release the Shirt!</p>
+        <a href="index.html" class="btn" style="background:var(--cream)">Back to Hub</a>
+    </div>
+
+    <div id="msg">
+        <h1 id="resTitle">HOOKED!</h1>
+        <button class="btn" onclick="resetGame()">Try Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const shirtImg = new Image(); shirtImg.src = "shirt.png";
+
+        let score = 0;
+        let gameActive = true;
+        
+        // Pendulum/Shirt State
+        let angle = 0;
+        let angleSpeed = 0.05;
+        let isReleased = false;
+        let shirtPos = { x: 200, y: 50, vx: 0, vy: 0 };
+
+        // Hook State
+        let hook = { x: 200, y: 420, w: 60, speed: 3 };
+
+        function draw() {
+            ctx.clearRect(0, 0, 400, 500);
+
+            // Draw Hook
+            ctx.strokeStyle = "#FF5E01";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(hook.x, hook.y, 20, 0, Math.PI, false);
+            ctx.stroke();
+            
+            // Move Hook
+            if (gameActive) {
+                hook.x += hook.speed;
+                if (hook.x > 350 || hook.x < 50) hook.speed *= -1;
+            }
+
+            if (!isReleased) {
+                // Swing Logic
+                angle += angleSpeed;
+                shirtPos.x = 200 + Math.sin(angle) * 150;
+                shirtPos.y = 50 + Math.cos(angle) * 20;
+                
+                // Draw String
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(200, 0);
+                ctx.lineTo(shirtPos.x, shirtPos.y);
+                ctx.stroke();
+            } else {
+                // Falling Logic
+                shirtPos.vy += 0.2; // Gravity
+                shirtPos.x += shirtPos.vx;
+                shirtPos.y += shirtPos.vy;
+
+                // Check Catch
+                if (shirtPos.y > hook.y - 20 && shirtPos.y < hook.y + 20) {
+                    if (Math.abs(shirtPos.x - hook.x) < 30) {
+                        victory();
+                    }
+                }
+
+                // Check Miss
+                if (shirtPos.y > 550) {
+                    failure();
+                }
+            }
+
+            // Draw Shirt
+            ctx.drawImage(shirtImg, shirtPos.x - 25, shirtPos.y - 25, 50, 50);
+
+            if (gameActive || isReleased) requestAnimationFrame(draw);
+        }
+
+        function release() {
+            if (isReleased || !gameActive) return;
+            isReleased = true;
+            shirtPos.vx = Math.sin(angle) * 5; // Carry momentum
+            shirtPos.vy = 2;
+        }
+
+        function victory() {
+            isReleased = false;
+            gameActive = false;
+            score += 1;
+            document.getElementById("score").innerText = score;
+            document.getElementById("resTitle").innerText = "SUCCESS!";
+            document.getElementById("msg").style.display = "block";
+        }
+
+        function failure() {
+            isReleased = false;
+            gameActive = false;
+            document.getElementById("resTitle").innerText = "MISSED!";
+            document.getElementById("msg").style.display = "block";
+        }
+
+        function resetGame() {
+            document.getElementById("msg").style.display = "none";
+            isReleased = false;
+            gameActive = true;
+            shirtPos = { x: 200, y: 50, vx: 0, vy: 0 };
+            angle = 0;
+        }
+
+        // Input Listeners
+        window.addEventListener("mousedown", release);
+        window.addEventListener("touchstart", (e) => {
+            release();
+            e.preventDefault();
+        }, { passive: false });
+
+        shirtImg.onload = draw;
+    </script>
+</body>
+</html>

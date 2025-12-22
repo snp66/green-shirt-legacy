@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jigsaw Legacy</title>
+    <style>
+        :root { --gold: #d4af37; --deep-green: #0f1a15; }
+        body { background: var(--deep-green); color: white; text-align: center; margin: 0; padding: 10px; font-family: sans-serif; }
+        canvas { width: 100%; max-width: 400px; height: auto; border: 2px solid var(--gold); touch-action: none; background: #111; }
+        .controls { margin-bottom: 10px; }
+        select, button { padding: 10px; background: var(--gold); border: none; font-weight: bold; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <select id="d" onchange="init()">
+            <option value="2">2x2 (Easy)</option>
+            <option value="4" selected>4x4 (Hard)</option>
+        </select>
+        <button onclick="init()">Restart</button>
+    </div>
+    <canvas id="cv" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("cv"), ctx = canvas.getContext("2d");
+        const img = new Image(); img.src = "shirt.png";
+        let pieces = [], sel = null, grid = 4;
+
+        function init() {
+            grid = parseInt(document.getElementById("d").value);
+            pieces = []; const sz = 400/grid;
+            for(let r=0; r<grid; r++) {
+                for(let c=0; c<grid; c++) {
+                    pieces.push({sx:c*sz, sy:r*sz, x:Math.random()*300, y:Math.random()*300, locked:false});
+                }
+            }
+        }
+        function draw() {
+            ctx.clearRect(0,0,400,400);
+            pieces.forEach(p => {
+                ctx.drawImage(img, p.sx, p.sy, 400/grid, 400/grid, p.x, p.y, 400/grid, 400/grid);
+                ctx.strokeStyle = p.locked ? "#00ff00" : "#d4af37";
+                ctx.strokeRect(p.x, p.y, 400/grid, 400/grid);
+            });
+            if(pieces.every(p => p.locked)) {
+                ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,400,400);
+                ctx.fillStyle = "white"; ctx.font = "30px Georgia"; ctx.fillText("LEGACY RESTORED!", 60, 200);
+            }
+            requestAnimationFrame(draw);
+        }
+        canvas.addEventListener("pointerdown", e => {
+            const r = canvas.getBoundingClientRect();
+            const x = (e.clientX - r.left) * (400/r.width), y = (e.clientY - r.top) * (400/r.height);
+            sel = pieces.slice().reverse().find(p => !p.locked && x > p.x && x < p.x + 400/grid && y > p.y && y < p.y + 400/grid);
+        });
+        window.addEventListener("pointermove", e => {
+            if(sel) {
+                const r = canvas.getBoundingClientRect();
+                sel.x = (e.clientX - r.left) * (400/r.width) - 200/grid;
+                sel.y = (e.clientY - r.top) * (400/r.height) - 200/grid;
+            }
+        });
+        window.addEventListener("pointerup", () => {
+            if(sel && Math.abs(sel.x - sel.sx) < 25 && Math.abs(sel.y - sel.sy) < 25) { sel.x = sel.sx; sel.y = sel.sy; sel.locked = true; }
+            sel = null;
+        });
+        img.onload = () => { init(); draw(); };
+    </script>
+</body>
+</html>
