@@ -3,68 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hook Toss - Heritage Society</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>Hook Shot - Legacy Arcade</title>
     <style>
-        :root { --gold: #d4af37; --forest: #1a3c31; --deep-green: #0f1a15; --cream: #f4f1ea; }
-        body { 
-            background: var(--deep-green); 
-            color: var(--gold); 
-            text-align: center; 
-            font-family: 'Georgia', serif; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            touch-action: none; 
-        }
-        .ui { padding: 15px; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.3); }
-        canvas { 
-            display: block; 
-            margin: 0 auto; 
-            background: var(--forest); 
-            border-bottom: 4px solid var(--gold); 
-            width: 100%; 
-            max-width: 600px; 
-            height: auto; 
-        }
-        .controls { padding: 20px; }
-        .btn { 
-            background: var(--gold); 
-            color: black; 
-            padding: 15px 30px; 
-            border: none; 
-            font-weight: bold; 
-            text-decoration: none; 
-            display: inline-block; 
-            text-transform: uppercase; 
-            cursor: pointer;
-        }
-        #msg { 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: rgba(0,0,0,0.9); 
-            padding: 30px; 
-            border: 2px solid var(--gold); 
-            display: none; 
-            z-index: 10; 
-        }
+        :root { --gold: #d4af37; --forest: #1a3c31; --red: #ff4444; --green: #2ecc71; }
+        body { background: #0f1a15; color: var(--gold); text-align: center; margin: 0; overflow: hidden; font-family: 'Georgia', serif; touch-action: none; }
+        .ui { position: fixed; top: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.5); font-weight: bold; z-index: 10; display: flex; justify-content: space-around; }
+        canvas { display: block; background: #111; touch-action: none; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        .btn { background: var(--gold); color: #000; padding: 15px 40px; border: none; font-weight: bold; margin: 10px; text-decoration: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="ui">Score: <span id="score">0</span></div>
+    <div class="ui">Score: <span id="sc">0</span> | Shirts: <span id="am">5</span></div>
     
-    <canvas id="gameCanvas" width="400" height="500"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
-    <div class="controls">
-        <p>Tap/Click to Release the Shirt!</p>
-        <a href="index.html" class="btn" style="background:var(--cream)">Back to Hub</a>
-    </div>
-
-    <div id="msg">
-        <h1 id="resTitle">HOOKED!</h1>
-        <button class="btn" onclick="resetGame()">Try Again</button>
+    <div id="ov" class="overlay">
+        <h1>GAME OVER</h1>
+        <h2 id="finalScore"></h2>
+        <button class="btn" onclick="location.reload()">Play Again</button>
+        <a href="index.html" class="btn" style="background:#eee">Back Home</a>
     </div>
 
     <script>
@@ -72,111 +32,119 @@
         const ctx = canvas.getContext("2d");
         const shirtImg = new Image(); shirtImg.src = "shirt.png";
 
-        let score = 0;
-        let gameActive = true;
-        
-        // Pendulum/Shirt State
-        let angle = 0;
-        let angleSpeed = 0.05;
-        let isReleased = false;
-        let shirtPos = { x: 200, y: 50, vx: 0, vy: 0 };
+        let score = 0, ammo = 5, targets = [], hooks = [];
+        let playerX = 200;
 
-        // Hook State
-        let hook = { x: 200, y: 420, w: 60, speed: 3 };
+        // Resize canvas for mobile
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            playerX = canvas.width / 2;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        function draw() {
-            ctx.clearRect(0, 0, 400, 500);
-
-            // Draw Hook
-            ctx.strokeStyle = "#FF5E01";
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(hook.x, hook.y, 20, 0, Math.PI, false);
-            ctx.stroke();
-            
-            // Move Hook
-            if (gameActive) {
-                hook.x += hook.speed;
-                if (hook.x > 350 || hook.x < 50) hook.speed *= -1;
+        class Target {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 40) + 20;
+                this.y = -20;
+                this.speed = 2 + Math.random() * 3;
+                this.type = Math.random() > 0.3 ? 'green' : 'red'; // 70% Green, 30% Red
+                this.r = 15;
             }
-
-            if (!isReleased) {
-                // Swing Logic
-                angle += angleSpeed;
-                shirtPos.x = 200 + Math.sin(angle) * 150;
-                shirtPos.y = 50 + Math.cos(angle) * 20;
-                
-                // Draw String
+            update() { this.y += this.speed; }
+            draw() {
+                ctx.fillStyle = this.type === 'green' ? '#2ecc71' : '#ff4444';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fill();
+                // Add a little glow
                 ctx.strokeStyle = "white";
                 ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(200, 0);
-                ctx.lineTo(shirtPos.x, shirtPos.y);
                 ctx.stroke();
-            } else {
-                // Falling Logic
-                shirtPos.vy += 0.2; // Gravity
-                shirtPos.x += shirtPos.vx;
-                shirtPos.y += shirtPos.vy;
-
-                // Check Catch
-                if (shirtPos.y > hook.y - 20 && shirtPos.y < hook.y + 20) {
-                    if (Math.abs(shirtPos.x - hook.x) < 30) {
-                        victory();
-                    }
-                }
-
-                // Check Miss
-                if (shirtPos.y > 550) {
-                    failure();
-                }
             }
-
-            // Draw Shirt
-            ctx.drawImage(shirtImg, shirtPos.x - 25, shirtPos.y - 25, 50, 50);
-
-            if (gameActive || isReleased) requestAnimationFrame(draw);
         }
 
-        function release() {
-            if (isReleased || !gameActive) return;
-            isReleased = true;
-            shirtPos.vx = Math.sin(angle) * 5; // Carry momentum
-            shirtPos.vy = 2;
+        class Hook {
+            constructor(x) {
+                this.x = x;
+                this.y = canvas.height - 80;
+                this.speed = 8;
+            }
+            update() { this.y -= this.speed; }
+            draw() {
+                ctx.strokeStyle = "#d4af37";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x, this.y + 15);
+                ctx.stroke();
+                // Hook tip
+                ctx.arc(this.x, this.y, 5, 0, Math.PI, true);
+                ctx.stroke();
+            }
         }
 
-        function victory() {
-            isReleased = false;
-            gameActive = false;
-            score += 1;
-            document.getElementById("score").innerText = score;
-            document.getElementById("resTitle").innerText = "SUCCESS!";
-            document.getElementById("msg").style.display = "block";
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Launcher (The Shirt)
+            ctx.drawImage(shirtImg, playerX - 30, canvas.height - 80, 60, 60);
+
+            // Manage Hooks
+            hooks.forEach((h, hi) => {
+                h.update();
+                h.draw();
+                if (h.y < 0) hooks.splice(hi, 1);
+            });
+
+            // Manage Targets
+            if (Math.random() < 0.03) targets.push(new Target());
+            targets.forEach((t, ti) => {
+                t.update();
+                t.draw();
+
+                // Collision Detection
+                hooks.forEach((h, hi) => {
+                    let dist = Math.hypot(t.x - h.x, t.y - h.y);
+                    if (dist < t.r + 5) {
+                        if (t.type === 'green') {
+                            score += 50;
+                        } else {
+                            score = Math.max(0, score - 100);
+                            ammo--; // Lose a "Shirt" for hitting a red dot
+                            document.getElementById("am").innerText = ammo;
+                        }
+                        document.getElementById("sc").innerText = score;
+                        targets.splice(ti, 1);
+                        hooks.splice(hi, 1);
+                        
+                        if (ammo <= 0) endGame();
+                    }
+                });
+
+                if (t.y > canvas.height) targets.splice(ti, 1);
+            });
+
+            if (ammo > 0) requestAnimationFrame(update);
         }
 
-        function failure() {
-            isReleased = false;
-            gameActive = false;
-            document.getElementById("resTitle").innerText = "MISSED!";
-            document.getElementById("msg").style.display = "block";
+        function endGame() {
+            document.getElementById("ov").style.display = "flex";
+            document.getElementById("finalScore").innerText = "Final Score: " + score;
         }
 
-        function resetGame() {
-            document.getElementById("msg").style.display = "none";
-            isReleased = false;
-            gameActive = true;
-            shirtPos = { x: 200, y: 50, vx: 0, vy: 0 };
-            angle = 0;
-        }
+        // Mobile Controls
+        canvas.addEventListener("pointermove", (e) => {
+            playerX = e.clientX;
+        });
 
-        // Input Listeners
-        window.addEventListener("mousedown", release);
-        window.addEventListener("touchstart", (e) => {
-            release();
+        canvas.addEventListener("pointerdown", (e) => {
+            if (ammo > 0) hooks.push(new Hook(playerX));
             e.preventDefault();
-        }, { passive: false });
+        });
 
-        shirtImg.onload = draw;
+        shirtImg.onload = update;
     </script>
 </body>
 </html>
