@@ -6,10 +6,22 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Surprise Delivery</title>
     <style>
-        :root { --gold: #d4af37; --deep-green: #0f1a15; --cream: #f4f1ea; }
-        body { background: var(--deep-green); color: var(--gold); text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; touch-action: none; }
+        :root { --gold: #d4af37; --deep-green: #0f1a15; }
+        * { box-sizing: border-box; }
+        body { 
+            background: var(--deep-green); 
+            color: var(--gold); 
+            text-align: center; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            position: fixed; /* Prevents scrolling */
+            width: 100%;
+            height: 100%;
+            font-family: sans-serif;
+            touch-action: none;
+        }
         
-        /* Landscape Warning Overlay */
         #landscape-warning {
             display: none;
             position: fixed;
@@ -20,35 +32,50 @@
             justify-content: center;
             align-items: center;
         }
-        #landscape-warning img { width: 80px; margin-bottom: 20px; animation: rotate 2s infinite; }
-        @keyframes rotate { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+        @media (orientation: portrait) { #landscape-warning { display: flex; } }
 
-        /* Show warning only in portrait mode on mobile */
-        @media (orientation: portrait) {
-            #landscape-warning { display: flex; }
+        .ui { 
+            position: absolute; 
+            top: 10px; 
+            width: 100%; 
+            font-weight: bold; 
+            z-index: 5;
+            text-shadow: 2px 2px 2px black;
         }
-
-        .ui { padding: 10px; font-weight: bold; font-size: 1.1rem; }
-        canvas { width: 100%; max-width: 800px; height: auto; background: #2c3e50; display: block; margin: 0 auto; border-bottom: 3px solid var(--gold); }
         
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        .btn { background: var(--gold); color: #000; padding: 15px 30px; border: none; font-weight: bold; margin: 10px; text-decoration: none; display: inline-block; border-radius: 5px; cursor: pointer; }
+        canvas { 
+            display: block; 
+            background: #2c3e50; 
+            touch-action: none;
+        }
+        
+        .overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100; 
+        }
+        .btn { background: var(--gold); color: #000; padding: 15px 30px; border: none; font-weight: bold; margin: 10px; text-decoration: none; border-radius: 5px; }
     </style>
 </head>
 <body>
 
     <div id="landscape-warning">
         <div style="font-size: 50px;">📱🔄</div>
-        <h2>Please Rotate Your Phone</h2>
-        <p>This game is best played horizontally.</p>
+        <h2>Rotate for Delivery</h2>
     </div>
 
     <div class="ui">Score: <span id="sc">0</span> | Shirts Left: <span id="am">5</span></div>
     
-    <canvas id="c" width="800" height="400"></canvas>
+    <canvas id="c"></canvas>
 
     <div id="ov" class="overlay">
-        <h1 id="resTitle">DELIVERY COMPLETE</h1>
+        <h1>DELIVERY COMPLETE</h1>
         <h2 id="finalScoreDisplay"></h2>
         <button class="btn" onclick="location.reload()">New Delivery</button>
         <a href="index.html" class="btn" style="background:#eee">Back Home</a>
@@ -57,54 +84,96 @@
     <script>
         const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
         const shirt = new Image(); shirt.src = "shirt.png";
+        
         let score = 0, ammo = 5, drag = false, m = {x:0, y:0};
-        let p = {x:100, y:300, vx:0, vy:0, active:false}, t = {x:600, y:330, w:100, spd:2.5};
+        let p = {x:100, y:0, vx:0, vy:0, active:false};
+        let t = {x:0, y:0, w:100, spd:2.5};
+
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Set positions relative to the NEW screen size
+            p.y = canvas.height * 0.75; // Launcher at 75% depth
+            t.y = canvas.height * 0.82; // Target slightly below launcher
+            t.x = canvas.width * 0.7;
+            update();
+        }
+
+        window.addEventListener('resize', init);
 
         function getTouchPos(e) {
             const r = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: (clientX - r.left) * (800 / r.width), y: (clientY - r.top) * (400 / r.height) };
+            return { x: clientX - r.left, y: clientY - r.top };
         }
 
         function update() {
-            ctx.clearRect(0,0,800,400);
-            // Ground
-            ctx.fillStyle = "#1a3c31"; ctx.fillRect(0,350,800,50);
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            // Ground (Scaled to screen bottom)
+            ctx.fillStyle = "#1a3c31"; 
+            ctx.fillRect(0, canvas.height * 0.85, canvas.width, canvas.height * 0.15);
+            
             // Target
-            ctx.fillStyle = "#e67e22"; ctx.fillRect(t.x, t.y, t.w, 20);
-            t.x += t.spd; if(t.x > 680 || t.x < 400) t.spd *= -1;
+            ctx.fillStyle = "#e67e22"; 
+            ctx.fillRect(t.x, t.y, t.w, 20);
+            t.x += t.spd; 
+            if(t.x > canvas.width - t.w || t.x < canvas.width * 0.4) t.spd *= -1;
 
             if(drag) { 
                 ctx.beginPath(); ctx.strokeStyle="white"; ctx.setLineDash([5, 5]);
-                ctx.moveTo(100,300); ctx.lineTo(m.x, m.y); ctx.stroke(); 
+                ctx.moveTo(100, canvas.height * 0.75); 
+                ctx.lineTo(m.x, m.y); 
+                ctx.stroke(); 
                 ctx.setLineDash([]);
             }
+
             if(p.active) {
                 p.vy += 0.25; p.x += p.vx; p.y += p.vy;
-                if(p.y > 330) {
-                    if(p.x > t.x && p.x < t.x + t.w) { score += 100; document.getElementById("sc").innerText = score; }
-                    p.active = false; ammo--; document.getElementById("am").innerText = ammo;
+                if(p.y > canvas.height * 0.82) {
+                    if(p.x > t.x && p.x < t.x + t.w) { 
+                        score += 100; 
+                        document.getElementById("sc").innerText = score; 
+                    }
+                    p.active = false; ammo--; 
+                    document.getElementById("am").innerText = ammo;
                     if(ammo <= 0) {
                         document.getElementById("ov").style.display = "flex";
                         document.getElementById("finalScoreDisplay").innerText = "Total Score: " + score;
                     }
                 }
+            } else {
+                // Reset shirt position to launcher
+                p.x = 100; p.y = canvas.height * 0.75;
             }
+            
             ctx.drawImage(shirt, p.x-25, p.y-25, 50, 50);
-            requestAnimationFrame(update);
+            if(ammo > 0) requestAnimationFrame(update);
         }
 
-        // Input Listeners
-        canvas.addEventListener("touchstart", e => { if(!p.active && ammo > 0) drag = true; m = getTouchPos(e); e.preventDefault(); }, {passive: false});
-        canvas.addEventListener("touchmove", e => { if(drag) m = getTouchPos(e); e.preventDefault(); }, {passive: false});
-        canvas.addEventListener("touchend", () => { if(drag) { p.active=true; p.x=100; p.y=300; p.vx=(100-m.x)*0.15; p.vy=(300-m.y)*0.15; drag=false; } });
+        canvas.addEventListener("touchstart", e => { 
+            if(!p.active && ammo > 0) drag = true; 
+            m = getTouchPos(e); 
+            e.preventDefault(); 
+        }, {passive: false});
         
-        canvas.addEventListener("mousedown", e => { if(!p.active && ammo > 0) drag = true; m = getTouchPos(e); });
-        window.addEventListener("mousemove", e => { if(drag) m = getTouchPos(e); });
-        window.addEventListener("mouseup", () => { if(drag) { p.active=true; p.x=100; p.y=300; p.vx=(100-m.x)*0.15; p.vy=(300-m.y)*0.15; drag=false; } });
+        canvas.addEventListener("touchmove", e => { 
+            if(drag) m = getTouchPos(e); 
+            e.preventDefault(); 
+        }, {passive: false});
         
-        shirt.onload = update;
+        canvas.addEventListener("touchend", () => { 
+            if(drag) { 
+                p.active=true; 
+                p.vx=(100-m.x)*0.15; 
+                p.vy=( (canvas.height * 0.75) - m.y)*0.15; 
+                drag=false; 
+            } 
+        });
+
+        shirt.onload = init;
     </script>
 </body>
 </html>
