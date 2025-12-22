@@ -3,107 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Great Hunt - Heritage Society</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>The Great Hunt</title>
     <style>
-        :root { --gold: #d4af37; --forest: #1a3c31; --deep-green: #0f1a15; --cream: #f4f1ea; }
-        body { 
-            background: var(--deep-green); 
-            color: var(--cream); 
-            text-align: center; 
-            margin: 0; 
-            padding: 10px; 
-            font-family: 'Georgia', serif;
-            touch-action: manipulation;
-        }
+        :root { --gold: #d4af37; --deep-green: #0f1a15; }
+        body { background: var(--deep-green); color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 10px; }
         
-        #area { 
-            position: relative; 
-            width: 100%; 
-            max-width: 600px; 
-            aspect-ratio: 4/3; 
-            margin: 10px auto; 
-            border: 4px solid var(--gold); 
-            /* This line links to your uploaded file */
-            background: #222 url('cluttered_room.jpg') no-repeat center; 
-            background-size: cover; 
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            border: 4px solid var(--gold);
+            /* THE FIX: Ensure this filename matches your GitHub file EXACTLY */
+            background-image: url('cluttered_room.jpg');
+            background-size: cover;
+            background-position: center;
+            background-color: #222; /* Fallback color */
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        #shirt { 
-            position: absolute; 
-            width: 55px; 
-            display: none; 
-            opacity: 0.4; 
-            filter: contrast(0.7) brightness(0.8);
+        #shirt-target {
+            position: absolute;
+            width: 50px;
+            height: auto;
+            display: none;
+            opacity: 0.4; /* Makes it hard to find */
+            filter: brightness(0.7) contrast(1.2);
             cursor: pointer;
             z-index: 10;
-            -webkit-user-drag: none;
         }
 
-        .status { font-size: 1.2rem; color: var(--gold); margin: 10px 0; min-height: 1.5em; text-shadow: 1px 1px 2px black; }
-        .btn { 
-            background: var(--gold); 
-            color: #000; 
-            padding: 15px 30px; 
-            border: none; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            width: 80%; 
-            max-width: 300px; 
-            margin: 8px auto; 
-            display: block;
-            cursor: pointer;
-            border-radius: 4px;
-        }
+        .controls { margin-top: 20px; }
+        .btn { background: var(--gold); color: black; padding: 15px 25px; border: none; font-weight: bold; text-decoration: none; display: inline-block; cursor: pointer; border-radius: 5px; margin: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="status" id="msg">Can you find the Shirt?</div>
+    <h2 id="status">Can you find the Shirt?</h2>
 
-    <div id="area">
-        <img src="shirt.png" id="shirt" onclick="win()">
+    <div id="game-container">
+        <img src="shirt.png" id="shirt-target" onclick="foundShirt()">
     </div>
 
-    <button class="btn" onclick="start()">Start the Hunt</button>
-    <a href="index.html" class="btn" style="background:var(--cream); text-decoration:none;">Back Home</a>
+    <div class="controls">
+        <button class="btn" onclick="startGame()">Start Hunt</button>
+        <a href="index.html" class="btn" style="background: #eee;">Back Home</a>
+    </div>
 
     <script>
-        const s = document.getElementById("shirt");
-        const msg = document.getElementById("msg");
-        let active = false;
+        const shirt = document.getElementById('shirt-target');
+        const status = document.getElementById('status');
 
-        function start() {
-            active = true;
-            s.style.display = "block";
-            s.style.opacity = "0.4";
-            s.style.filter = "contrast(0.7) brightness(0.8)";
-            s.style.transition = "none";
+        function startGame() {
+            shirt.style.display = "block";
+            shirt.style.opacity = "0.4";
             
-            // Random placement: 10% to 85% to keep it away from edges
-            const posX = Math.floor(Math.random() * 75) + 10;
-            const posY = Math.floor(Math.random() * 75) + 10;
-            const rotation = Math.floor(Math.random() * 360);
+            // Randomly place the shirt between 10% and 80% of the container
+            const x = Math.floor(Math.random() * 70) + 10;
+            const y = Math.floor(Math.random() * 70) + 10;
             
-            s.style.left = posX + "%";
-            s.style.top = posY + "%";
-            s.style.transform = `rotate(${rotation}deg)`;
+            shirt.style.left = x + "%";
+            shirt.style.top = y + "%";
+            shirt.style.transform = `rotate(${Math.floor(Math.random() * 360)}deg)`;
             
-            msg.innerText = "Searching... look closely!";
-            msg.style.color = "var(--gold)";
+            status.innerText = "Look closely...";
+            status.style.color = "white";
         }
 
-        function win() {
-            if(!active) return;
-            active = false;
-            s.style.opacity = "1";
-            s.style.filter = "none";
-            s.style.transform = "rotate(0deg) scale(1.4)";
-            s.style.transition = "all 0.4s ease-out";
-            
-            msg.innerText = "🎉 LEGACY RESTORED!";
-            msg.style.color = "#2ecc71";
+        function foundShirt() {
+            shirt.style.opacity = "1";
+            shirt.style.filter = "none";
+            shirt.style.transform = "scale(1.5)";
+            status.innerText = "🎉 FOUND IT!";
+            status.style.color = "#d4af37";
         }
     </script>
 </body>
