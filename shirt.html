@@ -6,24 +6,31 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Hook Shot - Heritage Arcade</title>
     <style>
-        :root { --gold: #d4af37; --orange: #FF8C00; --red: #ff4444; --green: #2ecc71; }
+        :root { --gold: #d4af37; --orange: #FF8C00; --red: #ff4444; }
         body { background: #0f1a15; color: var(--gold); text-align: center; margin: 0; overflow: hidden; font-family: 'Georgia', serif; touch-action: none; }
-        .ui { position: fixed; top: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.8); font-weight: bold; z-index: 10; display: flex; justify-content: space-around; border-bottom: 2px solid var(--gold); }
+        .ui { position: fixed; top: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.85); font-weight: bold; z-index: 10; display: flex; justify-content: space-around; border-bottom: 2px solid var(--gold); font-size: 1.1rem; }
         canvas { display: block; background: radial-gradient(circle, #1a3c31 0%, #0f1a15 100%); touch-action: none; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
         .btn { background: var(--gold); color: #000; padding: 15px 40px; border: none; font-weight: bold; margin: 10px; text-decoration: none; border-radius: 5px; cursor: pointer; text-transform: uppercase; }
+        #timer { color: #fff; }
+        .out-of-time { color: var(--red) !important; animation: blink 0.5s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="ui">Score: <span id="sc">0</span> | Shirts Left: <span id="am">5</span></div>
+    <div class="ui">
+        <div>⏱️ <span id="timer">30</span>s</div>
+        <div>Score: <span id="sc">0</span></div>
+        <div>👕 <span id="am">5</span></div>
+    </div>
     
     <canvas id="gameCanvas"></canvas>
 
     <div id="ov" class="overlay">
-        <h1 style="color:var(--red); font-size: 3rem; margin-bottom: 0;">GAME OVER</h1>
+        <h1 id="overTitle" style="color:var(--red); font-size: 3rem; margin-bottom: 0;">GAME OVER</h1>
         <h2 id="finalScore" style="color:white; margin-top: 10px;"></h2>
-        <button class="btn" onclick="location.reload()">Try Again</button>
+        <button class="btn" onclick="location.reload()">Play Again</button>
         <a href="index.html" class="btn" style="background:#eee">Exit Arcade</a>
     </div>
 
@@ -32,8 +39,17 @@
         const ctx = canvas.getContext("2d");
         const shirtImg = new Image(); shirtImg.src = "shirt.png";
 
-        let score = 0, ammo = 5, targets = [], hooks = [], isGameOver = false;
-        let playerX = 200;
+        let score = 0, ammo = 5, timeLeft = 30, isGameOver = false;
+        let targets = [], hooks = [], playerX = 200;
+
+        // Timer Logic
+        const countdown = setInterval(() => {
+            if (isGameOver) { clearInterval(countdown); return; }
+            timeLeft--;
+            document.getElementById("timer").innerText = timeLeft;
+            if (timeLeft <= 5) document.getElementById("timer").classList.add("out-of-time");
+            if (timeLeft <= 0) endGame("TIME UP!");
+        }, 1000);
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -46,19 +62,17 @@
         class Target {
             constructor() {
                 this.x = Math.random() * (canvas.width - 60) + 30;
-                this.y = -30;
-                this.speed = 2 + Math.random() * 2.5;
-                this.type = Math.random() > 0.35 ? 'green' : 'red';
-                this.r = 18;
+                this.y = -40;
+                this.speed = 2 + Math.random() * 3;
+                this.type = Math.random() > 0.35 ? 'present' : 'coal';
+                this.char = this.type === 'present' ? '🎁' : '🪨';
+                this.size = 35;
             }
             update() { this.y += this.speed; }
             draw() {
-                ctx.fillStyle = this.type === 'green' ? '#2ecc71' : '#ff4444';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = "rgba(255,255,255,0.3)";
-                ctx.beginPath(); ctx.arc(this.x-5, this.y-5, 5, 0, Math.PI*2); ctx.fill();
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = "center";
+                ctx.fillText(this.char, this.x, this.y);
             }
         }
 
@@ -66,11 +80,11 @@
             constructor(x) {
                 this.x = x;
                 this.y = canvas.height - 100;
-                this.speed = 14;
+                this.speed = 15;
             }
             update() { this.y -= this.speed; }
             draw() {
-                ctx.strokeStyle = "#FF8C00";
+                ctx.strokeStyle = "#FF8C00"; // Bright Orange
                 ctx.lineWidth = 5;
                 ctx.lineCap = "round";
                 ctx.beginPath();
@@ -95,7 +109,7 @@
             }
 
             // Targets
-            if (Math.random() < 0.03) targets.push(new Target());
+            if (Math.random() < 0.035) targets.push(new Target());
             for (let i = targets.length - 1; i >= 0; i--) {
                 let t = targets[i];
                 t.update();
@@ -104,14 +118,14 @@
                 for (let j = hooks.length - 1; j >= 0; j--) {
                     let h = hooks[j];
                     let dist = Math.hypot(t.x - h.x, t.y - h.y);
-                    if (dist < t.r + 10) {
-                        if (t.type === 'green') {
+                    if (dist < 25) {
+                        if (t.type === 'present') {
                             score += 50;
                         } else {
                             score = Math.max(0, score - 100);
                             ammo--;
                             document.getElementById("am").innerText = ammo;
-                            if (ammo <= 0) { endGame(); return; }
+                            if (ammo <= 0) { endGame("OUT OF SHIRTS!"); return; }
                         }
                         document.getElementById("sc").innerText = score;
                         targets.splice(i, 1);
@@ -124,25 +138,18 @@
             requestAnimationFrame(update);
         }
 
-        function endGame() {
+        function endGame(reason) {
             isGameOver = true;
             document.getElementById("ov").style.display = "flex";
-            document.getElementById("finalScore").innerText = "Grand Total: " + score;
+            document.getElementById("overTitle").innerText = reason;
+            document.getElementById("finalScore").innerText = "Final Score: " + score;
         }
 
-        // Updated Controls: Move AND Fire on every tap/touch
         function handleInput(e) {
-            if (isGameOver || ammo <= 0) return;
-            
-            // Get X coordinate from either touch or mouse
+            if (isGameOver) return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            
-            // 1. Move Shirt
             playerX = clientX;
-            
-            // 2. Fire Hook
             hooks.push(new Hook(playerX));
-            
             e.preventDefault();
         }
 
