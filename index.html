@@ -13,6 +13,7 @@
             --forest: #1a3c31; 
             --deep-green: #0f1a15;
             --cream: #f4f1ea;
+            --action-green: #2ecc71;
         }
         
         body { 
@@ -146,6 +147,20 @@
             text-transform: uppercase; 
             text-decoration: none; 
             border-radius: 4px;
+            text-align: center;
+        }
+
+        .btn-comic {
+            background: var(--action-green);
+            color: white;
+            padding: 15px 25px;
+            display: block;
+            width: fit-content;
+            margin: 30px auto 0;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         .video-container { 
@@ -180,7 +195,7 @@
     <nav>
         <a href="#story">The Legend</a>
         <a href="#games">Arcade</a>
-        <a href="#video">Documentary</a>
+        <a href="#video">Music Video</a>
     </nav>
 
     <header>
@@ -207,6 +222,10 @@
             </div>
 
             <p>Today, this site stands as a digital monument to the shirt, honoring years of laughter and the "orange hook" spirit. What will come next? No one knows.</p>
+
+            <a href="comic.html" class="btn-comic">
+                📖 See The Comic! 
+            </a>
         </div>
     </section>
 
@@ -247,7 +266,7 @@
     </section>
 
     <section id="video">
-        <h2>Documentary</h2>
+        <h2>Music Video</h2>
         <div class="video-container">
             <iframe src="https://www.youtube-nocookie.com/embed/vGZXtj7NREU" frameborder="0" allowfullscreen></iframe>
         </div>
